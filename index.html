@@ -19,6 +19,8 @@
     </noscript>
   </head>
   <body>
+    <div class="container-fluid">
+
     <div class="container">
       <div id="content" class="col-lg-12">
         <h1>Hangman</h1>
@@ -30,15 +32,17 @@
         </div>
         <p id="loading">Game loading. . .</p>
         <div class="row">
-          <canvas id="stage" width="400" height="400"></canvas>
+          <div class="col-lg-8">
+            <canvas id="stage"></canvas>
+          </div>
+          <p id="word"> WUBBALUBADUBDUB!</p>
+          <div class="col-lg-4 ">
+              <div id="letters"></div>
+          </div>
         </div>
         <div id="gameButtons" class="row">
-          <button id="play" class="btn btn-primary">New Game</button>
-          <button id="clear" class="btn btn-danger">Clear Score</div>
-        </div>
-        <div class="row">
-          <p id="word"></p>
-          <div id="letters"></div>
+          <button id="play">New Game</button>
+          <button id="clear">Clear Score</div>
         </div>
       </div>
     </div>

@@ -16,7 +16,35 @@
           let stage = canvas;
           that.context = stage.getContext("2d");
           that.createLetters = 'abcdefghijklmnopqrstuvwxyz'.split("");
-          that.drawBody = () => {
+          const getWord = () => {
+            let length = WORDS.length;
+            let random = Math.floor(Math.random() * length);
+            console.log(' WHAT IS OUR LENGTH', WORDS[random]);
+            return WORDS[random];
+          };
+          that.newGame = () => {
+            let placeholders = '';
+            let frag = document.createDocumentFragment();
+            badGuesses = 0;
+            correctGuesses = 0;
+            wordToGuess = getWord();
+            wordLength = wordToGuess.length;
+            for (let i = 0; i< wordLength; i += 1) {
+              placeholders += '_ ';
+              word.innerHTML = placeholders;
+              word.style.fontSize = '40px'
+            };
+            game.createLetters.map((letter) => {
+              let el = document.createElement("p");
+              let text = document.createTextNode(letter.toUpperCase());
+              el.appendChild(text);
+              letters.appendChild(el);
+            })
+          };
+          that.resetScore = () => {
+
+          };
+          that.drawCanvas = () => {
               let ctx = that.context;
               ctx.moveTo(100,0);
               ctx.lineTo(100, 50);
@@ -25,19 +53,18 @@
           return that;
       };
       let game = init(canvas);
-
       window.addEventListener('keydown', function(event) {
         if (event.defaultPrevented) {
             return;
         }
         console.log(' WHAT IS THE KEY PRESSED???', event.key);
-        // switch (event.key) {
-        //   case expression:
-        //
-        //     break;
-        //   default:
-        //
-        // }
+        switch (event.key) {
+
+          default: {
+            game.drawCanvas();
+            game.newGame()
+          }
+        }
 
       });
       document.getElementById('warning').style.display = "none";

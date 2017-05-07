@@ -5,3 +5,14 @@
 #stage {
   border: solid 1px #444;
 }
+#letters p{
+  float: left;
+  padding: 10px;
+  margin: 2px;
+  background-color: black;
+  color: #fff;
+}
+#word {
+  font-size: 30px;
+  color: #222;
+}
