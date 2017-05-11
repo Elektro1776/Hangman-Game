@@ -104,7 +104,7 @@
           let that = {};
           let stage = canvas;
           that.context = stage.getContext("2d");
-          that.createLetters = 'abcdefghijklmnopqrstuvwxyz'.split("");
+          that.letterChoices = 'abcdefghijklmnopqrstuvwxyz'.split("");
           const getWord = () => {
             let length = WORDS.length;
             let random = Math.floor(Math.random() * length);
@@ -124,7 +124,7 @@
               word.innerHTML = placeholders;
               word.style.fontSize = '40px';
             };
-            that.createLetters.map((letter) => {
+            that.letterChoices.map((letter) => {
               let el = document.createElement("p");
               let text = document.createTextNode(letter.toUpperCase());
               el.appendChild(text);
@@ -144,11 +144,10 @@
 //
 // }
           that.checkGuess = (letter) => {
-            console.log(' STORE GUESSES BEFORE LOOPING ', store, "Bad Guesses", letters.children);
-            correctGuesses = store.correctGuesses;
-            badGuesses = store.badGuesses;
-            let currentWord = store.currentWord;
-            let length = currentWord.length
+              correctGuesses = store.correctGuesses;
+              badGuesses = store.badGuesses;
+              let currentWord = store.currentWord;
+              let length = currentWord.length
               let placeholders = word.innerHTML;
               let letterExists = currentWord.search(letter);
               wrongGuess = true;
@@ -160,14 +159,12 @@
                     correctGuesses += 1;
                   }
                   if (correctGuesses === length) {
-                    // console.log(' DRAWCANVAS FIRE!');
                     document.dispatchEvent(new CustomEvent('action', { detail: endGame()}))
                     that.drawCanvas();
                   }
                 }
                 if (wrongGuess) {
                   badGuesses +=1;
-                  console.log(' WRONG GUESS BEFORE DRAW :::', badGuesses );
                   document.dispatchEvent(new CustomEvent('action', { detail: updateBadGuesses(badGuesses) }));
                   that.drawCanvas()
                 }
@@ -175,6 +172,7 @@
                 word.innerHTML = placeholders.join('');
 
           };
+          //helper function to draw our lines
           function drawLine(context, from, to) {
             console.log(' DRAW LINE FIRE!');
             context.beginPath();
@@ -189,7 +187,7 @@
             c.lineWidth = 10;
             c.strokeStyle = '#444';
             c.font = 'bold 24px Optimer, Arial, Helvetica, sans-serif';
-            // c.fillStyle = '#333';
+
             // draw the ground
             drawLine(c, [20,130], [200,130]);
 
@@ -244,7 +242,6 @@
         document.dispatchEvent(new CustomEvent('state'));
     }, false);
     document.addEventListener('state', function(e) {
-        // console.log('WHAT IS THE STORE STATE from state listen', store);
     });
     // Lets initialze some varsss that relate to our playing field.
       canvas = document.getElementById('stage'),
