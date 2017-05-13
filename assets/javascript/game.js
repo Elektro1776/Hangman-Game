@@ -3,6 +3,7 @@
       @var canvas the canvas element used through out the application.
       @var word this is where we will end up displaying the word as you guess, (if you can muahaha...)
       @var letters We will dump our alphabet of letters into this node.
+      @var store our source of truth for our state of the game.
    */
 
 
@@ -62,6 +63,9 @@
           },
       };
   };
+
+  ////////////////////////////////
+
   /* OUR REDUCER GENERATOR*/
   const ELEKTRO = {
       createReducer(initialReducerState, handlers) {
@@ -80,6 +84,9 @@
           return Object.assign({}, oldObject, newValues);
       },
   };
+
+//////////////////////////////
+
   /* AND OUR ACTUAL REDCUER FOR THE GAME*/
   const GAME_REDUCER = ELEKTRO.createReducer({}, {
     [ACTION.GAME_STARTED](state, action) {
@@ -125,25 +132,32 @@
               word.style.fontSize = '40px';
             };
             that.letterChoices.map((letter) => {
-              let el = document.createElement("p");
-              let text = document.createTextNode(letter.toUpperCase());
-              el.appendChild(text);
-              letters.appendChild(el);
+              let div = document.createElement("div");
+              div.innerHTML = letter.toUpperCase();
+              div.style.cursor = 'pointer';
+              div.onclick = getLetter;
+              frag.appendChild(div);
+              // let text = document.createTextNode(letter.toUpperCase());
+              // el.appendChild(text);
+              letters.appendChild(frag);
             });
           };
           // Get selected letter and remove it from the alphabet pad
-// function getLetter() {
-//     that.checkGuess(this.innerHTML);
-//     this.innerHTML = '&nbsp;';
-//     this.style.cursor = 'default';
-//     this.onclick = null;
-// }
+function getLetter(letter) {
+  console.log(' WHAT IS OUR INNER HTML ???', this.innerHTML);
+    that.checkGuess(this.innerHTML);
+    this.innerHTML = '&nbsp;';
+    this.style.cursor = 'default';
+    this.style.dispaly = 'none';
+    this.onclick = null;
+}
 
 // Check whether selected letter is in the word to be guessed
 // function checkLetter(letter) {
 //
 // }
           that.checkGuess = (letter) => {
+            console.log(' WHAT IS THE LLETTERERER', letter);
               correctGuesses = store.correctGuesses;
               badGuesses = store.badGuesses;
               let currentWord = store.currentWord;
