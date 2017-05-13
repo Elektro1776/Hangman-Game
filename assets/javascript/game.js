@@ -119,9 +119,9 @@
             document.dispatchEvent(new CustomEvent('action', { detail: registerCurrentWord(newWord) }));
             return WORDS[random];
           };
-          var wordToGuess = getWord();
           that.newGame = () => {
             document.dispatchEvent(new CustomEvent('action', { detail: startGame() }))
+            getWord();
             let placeholders = '';
             let frag = document.createDocumentFragment();
             badGuesses = 0;
@@ -152,10 +152,6 @@ function getLetter(letter) {
     this.onclick = null;
 }
 
-// Check whether selected letter is in the word to be guessed
-// function checkLetter(letter) {
-//
-// }
           that.checkGuess = (letter) => {
             console.log(' WHAT IS THE LLETTERERER', letter);
               correctGuesses = store.correctGuesses;
@@ -174,13 +170,13 @@ function getLetter(letter) {
                   }
                   if (correctGuesses === length) {
                     document.dispatchEvent(new CustomEvent('action', { detail: endGame()}))
-                    that.drawCanvas();
+                    that.renderCanvas();
                   }
                 }
                 if (wrongGuess) {
                   badGuesses +=1;
                   document.dispatchEvent(new CustomEvent('action', { detail: updateBadGuesses(badGuesses) }));
-                  that.drawCanvas()
+                  that.renderCanvas()
                 }
                 document.dispatchEvent(new CustomEvent('action', { detail: updateCorrectGuesses(correctGuesses) }));
                 word.innerHTML = placeholders.join('');
@@ -194,7 +190,7 @@ function getLetter(letter) {
             context.lineTo(to[0], to[1]);
             context.stroke();
           }
-          that.drawCanvas = () => {
+          that.renderCanvas = () => {
             let badGuess = store.badGuesses;
             c = that.context;
             canvas.width = canvas.width;
@@ -241,7 +237,7 @@ function getLetter(letter) {
               drawLine(c, [120, 85], [140, 80])
             }
             if (badGuess > 7) {
-              // draw right arm
+              // draw left arm
               drawLine(c, [120, 85], [100, 80])
             }
           }
@@ -261,6 +257,13 @@ function getLetter(letter) {
       canvas = document.getElementById('stage'),
       word = document.getElementById('word'),
       letters = document.getElementById('letters');
+    // some click handlers for the start game and clear score buttons
+
+      let startButton = document.getElementById('play');
+      startButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        game.newGame();
+      })
 
       // init is our power constructor that will create all our functions to draw
       // our lil dude and keep track of guesses, wins, losses etc...
@@ -273,8 +276,6 @@ function getLetter(letter) {
     }
 
     if (event.keyCode === 32 && store.gameStatus !== 'GAME_STARTED') {
-      console.log(' new game is firing!!!!', store.gameStatus);
-      game.drawCanvas();
       game.newGame();
     } else {
       if (event.keyCode === 32) {
@@ -285,4 +286,5 @@ function getLetter(letter) {
     }
 
   });
+
 }());
