@@ -4,6 +4,8 @@
       @var word this is where we will end up displaying the word as you guess, (if you can muahaha...)
       @var letters We will dump our alphabet of letters into this node.
       @var store our source of truth for our state of the game.
+      @const ACTION all the actions that update our game state as we play
+
    */
 
 
@@ -22,6 +24,7 @@
   /* OUR ACTION TYPES*/
   const ACTION = {
     GAME_STARTED: 'GAME_STARTED',
+    GAME_IN_PROGRESS: 'GAME_IN_PROGRESS',
     GAME_ENDED: 'GAME_ENDED',
     WORD_TO_GUESS: 'WORD_TO_GUESS',
     UPDATE_CORRECT_GUESSES: 'UPDATE_CORRECT_GUESSES',
@@ -29,16 +32,26 @@
     UPDATE_CANVAS: 'UPDATE_CANVAS',
   };
   /* OUR ACTIONS*/
+  /** @func startGame
+      @returns {Object}
+  */
+
   function startGame() {
       return {
           type: 'GAME_STARTED',
       };
   };
+  /** @func endGame
+      @returns {Object}
+  */
   function endGame() {
       return {
           type: 'GAME_ENDED',
       };
   };
+  /** @func registerCurrentWord
+      @returns {Object}
+  */
   function registerCurrentWord(currentWord) {
       return {
           type: 'WORD_TO_GUESS',
@@ -47,6 +60,9 @@
           },
       };
   };
+  /** @func updateCorrectGuesses
+      @returns {Object}
+  */
   function updateCorrectGuesses(numberOfCorrectGuesses) {
       return {
           type: 'UPDATE_CORRECT_GUESSES',
@@ -55,6 +71,9 @@
           },
       };
   };
+  /** @func updateBadGuesses
+      @returns {Object}
+  */
   function updateBadGuesses(numberOfBadGuesses) {
       return {
           type: 'UPDATE_BAD_GUESSES',
@@ -90,16 +109,16 @@
   /* AND OUR ACTUAL REDCUER FOR THE GAME*/
   const GAME_REDUCER = ELEKTRO.createReducer({}, {
     [ACTION.GAME_STARTED](state, action) {
-        return Object.assign({}, state, { gameStatus: 'GAME_STARTED'})
+        return Object.assign({}, state, { gameStatus: 'GAME_IN_PROGRESS' });
     },
     [ACTION.GAME_ENDED](state, action) {
         return Object.assign({}, state, { gameStatus: 'GAME_ENDED' });
     },
     [ACTION.WORD_TO_GUESS](state,action) {
-      return Object.assign({}, state, { currentWord: action.payload.currentWord})
+      return Object.assign({}, state, { currentWord: action.payload.currentWord });
     },
     [ACTION.UPDATE_CORRECT_GUESSES](state, action) {
-        return Object.assign({}, state, { correctGuesses: action.payload.numberOfCorrectGuesses})
+        return Object.assign({}, state, { correctGuesses: action.payload.numberOfCorrectGuesses });
     },
     [ACTION.UPDATE_BAD_GUESSES](state,action) {
         return Object.assign({}, state, { badGuesses: action.payload.numberOfBadGuesses });
@@ -119,11 +138,20 @@
             document.dispatchEvent(new CustomEvent('action', { detail: registerCurrentWord(newWord) }));
             return WORDS[random];
           };
-          that.newGame = () => {
-            document.dispatchEvent(new CustomEvent('action', { detail: startGame() }))
-            getWord();
-            let placeholders = '';
+          function renderLetters() {
             let frag = document.createDocumentFragment();
+
+            that.letterChoices.map((letter) => {
+              let div = document.createElement("div");
+              div.innerHTML = letter.toUpperCase();
+              div.style.cursor = 'pointer';
+              div.onclick = getLetter;
+              frag.appendChild(div);
+              letters.appendChild(frag);
+            });
+          }
+          function renderPlaceholders() {
+            let placeholders = '';
             badGuesses = 0;
             wordLength = store.currentWord.length;
             for (let i = 0; i < wordLength; i += 1) {
@@ -131,29 +159,22 @@
               word.innerHTML = placeholders;
               word.style.fontSize = '40px';
             };
-            that.letterChoices.map((letter) => {
-              let div = document.createElement("div");
-              div.innerHTML = letter.toUpperCase();
-              div.style.cursor = 'pointer';
-              div.onclick = getLetter;
-              frag.appendChild(div);
-              // let text = document.createTextNode(letter.toUpperCase());
-              // el.appendChild(text);
-              letters.appendChild(frag);
-            });
+          }
+          that.newGame = () => {
+            // document.dispatchEvent(new CustomEvent('action', { detail: startGame() }))
+            getWord();
+            renderLetters();
           };
           // Get selected letter and remove it from the alphabet pad
-function getLetter(letter) {
-  console.log(' WHAT IS OUR INNER HTML ???', this.innerHTML);
-    that.checkGuess(this.innerHTML);
-    this.innerHTML = '&nbsp;';
-    this.style.cursor = 'default';
-    this.style.dispaly = 'none';
-    this.onclick = null;
-}
+          function getLetter(letter) {
+              that.checkGuess(this.innerHTML);
+              this.innerHTML = '&nbsp;';
+              this.style.cursor = 'default';
+              this.style.dispaly = 'none';
+              this.onclick = null;
+          }
 
           that.checkGuess = (letter) => {
-            console.log(' WHAT IS THE LLETTERERER', letter);
               correctGuesses = store.correctGuesses;
               badGuesses = store.badGuesses;
               let currentWord = store.currentWord;
@@ -249,9 +270,20 @@ function getLetter(letter) {
 
     document.addEventListener('action', function(e) {
         store = GAME_REDUCER(store, e.detail);
-        document.dispatchEvent(new CustomEvent('state'));
+        document.dispatchEvent(new CustomEvent('state', { detail: store}));
     }, false);
     document.addEventListener('state', function(e) {
+      console.log(' WHAT IS OUR EVENT DATA?????', e.detail, 'STORE STATE',store);
+      // if (e.detail.gameStatus !== )
+      switch (e.detail.gameStatus) {
+        case 'GAME_IN_PROGRESS': {
+          game.newGame();
+        }
+
+          break;
+        default:
+
+      }
     });
     // Lets initialze some varsss that relate to our playing field.
       canvas = document.getElementById('stage'),
@@ -260,9 +292,14 @@ function getLetter(letter) {
     // some click handlers for the start game and clear score buttons
 
       let startButton = document.getElementById('play');
+      let clearScore = document.getElementById('clear');
       startButton.addEventListener('click', function(e) {
         e.preventDefault();
         game.newGame();
+      });
+      clearScore.addEventListener('click', function(e) {
+        e.preventDefault();
+
       })
 
       // init is our power constructor that will create all our functions to draw
@@ -276,7 +313,8 @@ function getLetter(letter) {
     }
 
     if (event.keyCode === 32 && store.gameStatus !== 'GAME_STARTED') {
-      game.newGame();
+      document.dispatchEvent(new CustomEvent('action', { detail: startGame()}))
+      // game.newGame();
     } else {
       if (event.keyCode === 32) {
           return;
