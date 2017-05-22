@@ -1,3 +1,6 @@
+/*
+@const WORDS this is the array of all words that we can randomly select from 
+*/
 const WORDS = [
 'ablaze',
 'admixture',
