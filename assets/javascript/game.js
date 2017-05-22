@@ -15,7 +15,10 @@
       word,
       holder,
       buttons,
+      guessedLetters,
+      helpText,
       letters;
+
   /* THIS STORE WILL BE OUR MASTER STATE HOLDER */
   var store = {
     gameStatus: 'GAME_ENDED',
@@ -41,7 +44,6 @@
   };
   /* OUR ACTIONS*/
   function startGame() {
-    console.log(' START GAME FIRE!!!!');
       return {
           type: 'GAME_STARTED',
           remainingGuesses: 8,
@@ -120,7 +122,6 @@
   /* AND OUR ACTUAL REDCUER FOR THE GAME*/
   const GAME_REDUCER = createReducer({}, {
     [ACTION.GAME_STARTED](state, action) {
-      console.log(' WHAT IS THE REMAINING GUESSES IN THE REDUCER', action);
         return Object.assign({}, state, { gameStatus: 'GAME_STARTED', remainingGuesses: action.remainingGuesses,
           startingGuesses: action.startingGuesses,
           badGuesses: action.badGuesses,
@@ -139,11 +140,9 @@
         return Object.assign({}, state, { remainingGuesses: action.payload.numberOfRemainingGuesses, badGuesses: action.payload.numberOfBadGuesses  });
     },
     [ACTION.UPDATE_WINS](state, action) {
-      console.log(' UPDATE WINDS REDUCER FIRE');
         return Object.assign({}, state, { wins: action.payload.newWinStreak });
     },
     [ACTION.UPDATE_LOSSES](state, action) {
-      console.log(' UPDATE LOSS REDUCER FIRE');
         return Object.assign({}, state, { losses: action.payload.newLossStreak });
     },
   });
@@ -158,11 +157,8 @@
             let length = WORDS.length;
             let random = Math.floor(Math.random() * length);
             let newWord = WORDS[random];
-            document.dispatchEvent(new CustomEvent('action', { detail: registerCurrentWord(newWord) }));
             remainingGuessesEl.innerHTML = store.startingGuesses;
             letters.innerHTML = '';
-            // word.innerHTML = '';
-            console.log(' and what is the word inner html here????', word.innerHTML, newWord);
             let placeholders = [];
             let frag = document.createDocumentFragment();
             badGuesses = 0;
@@ -170,21 +166,21 @@
             for (let i = 0; i < wordLength; i += 1) {
               placeholders.push('_');
             };
-            that.letterChoices.map((letter) => {
-              let div = document.createElement("div");
-              div.innerHTML = letter.toUpperCase();
-              div.style.cursor = 'pointer';
-              div.onclick = getLetter;
-              frag.appendChild(div);
-              letters.appendChild(frag);
-            });
+            // that.letterChoices.map((letter) => {
+            //   let div = document.createElement("div");
+            //   div.innerHTML = letter.toUpperCase();
+            //   div.style.cursor = 'pointer';
+            //   div.onclick = getLetter;
+            //   frag.appendChild(div);
+            //   letters.appendChild(frag);
+            // });
             word.style.fontSize = '40px';
             word.textContent = placeholders.join('');
+            document.dispatchEvent(new CustomEvent('action', { detail: registerCurrentWord(newWord) }));
             return WORDS[random];
           };
           // Get selected letter and remove it from the alphabet pad
           function getLetter (letter) {
-            console.log(' WHAT IS OUR INNER HTML ???', this.innerHTML);
               that.checkGuess(this.innerHTML.toLowerCase());
               this.innerHTML = '&nbsp;';
               this.style.cursor = 'default';
@@ -217,18 +213,18 @@
 
                   }
 
-                  console.log(' IS THIS FIRING TWICE WHEN WE WIN????');
                   if (placeholders.join('') === currentWord) {
                     currentWinStreak += 1;
                     document.dispatchEvent(new CustomEvent('action', { detail: endGame(currentWinStreak, currentLossStreak)}));
-                    console.log(' CURRENT WIN STREAK!!!', currentWinStreak, store.wins);
                     return alert('NICE JOB YOU WON! WOULD YOU LIKE TO PLAY AGAIN?')
                   }
                 }
                 if (wrongGuess) {
+                  var newLetter = document.createElement('p');
+                  newLetter.innerHTML = letter;
+                  guessedLetters.appendChild(newLetter);
                   badGuesses +=1;
                   remainingGuesses -= 1;
-                  remainingGuessesEl.innerHTML = remainingGuesses;
                   if (remainingGuesses == 0) {
                     currentLossStreak += 1;
                     document.dispatchEvent(new CustomEvent('action', { detail: endGame(currentWinStreak, currentLossStreak)}));
@@ -310,16 +306,20 @@
         store = GAME_REDUCER(store, e.detail);
         document.dispatchEvent(new CustomEvent('state', { detail: store }));
     }, false);
+
     document.addEventListener('state', function(e) {
       store = e.detail;
       if (e.detail.gameStatus === 'GAME_ENDED') {
         wins.innerHTML = e.detail.wins;
         losses.innerHTML = e.detail.losses;
+        guessedLetters.innerHTML = '';
         game.newGame();
         game.renderCanvas();
       }
       if (e.detail.gameStatus === 'GAME_STARTED') {
         buttons.style.display = 'none';
+        helpText.style.display = 'none';
+
       }
     });
     // Lets initialze some varsss that relate to our playing field.
@@ -328,8 +328,10 @@
       letters = document.getElementById('letters');
       wins = document.getElementById('wins');
       losses = document.getElementById('losses');
-      buttons = document.getElementById('gameButtons');
+      buttons = document.getElementById('play');
+      guessedLetters = document.getElementById('guessedLetters');
       remainingGuessesEl = document.getElementById('remainingGuesses');
+      helpText = document.getElementById('helptext');
     // some click handlers for the start game and clear score buttons
 
       let startButton = document.getElementById('play');
@@ -337,7 +339,13 @@
         e.preventDefault();
         game.newGame();
       })
-
+      let clearButton = document.getElementById('clear');
+      clearButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        wins.innerHTML = 0
+        losses.innerHTML = 0;
+        guessedLetters.innerHTML = '';
+      })
       // init is our power constructor that will create all our functions to draw
       // our lil dude and keep track of guesses, wins, losses etc...
       game = init(canvas);
@@ -353,7 +361,7 @@
     if (keyCode === 32 && store.gameStatus !== 'GAME_STARTED') {
       game.newGame();
     }
-    if (keyCode === 32 || keyCode === 91 || keyCode === 16) {
+    if (keyCode === 32 || keyCode === 91 || keyCode === 93 || keyCode === 190 || keyCode === 191 || keyCode === 16 || keyCode === 17 || keyCode === 18 || keyCode === 186) {
           return;
     } else {
         if( store.gameStatus === 'GAME_STARTED') {

@@ -12,6 +12,15 @@
   background-color: black;
   color: #fff;
 }
+#guessedLetters {
+  display: inline-flex;
+
+}
+#guessedLetters p {
+  font-size: 40px;
+  font-weight: 700;
+  padding: 2px;
+}
 #word {
   font-size: 30px;
   color: #222;
