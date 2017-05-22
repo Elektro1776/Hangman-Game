@@ -30,6 +30,7 @@
     losses: 0,
     startingGuesses: 8,
     remainingGuesses: 8,
+    previousLetter: '',
   };
   /* OUR ACTION TYPES*/
   const ACTION = {
@@ -38,6 +39,7 @@
     WORD_TO_GUESS: 'WORD_TO_GUESS',
     UPDATE_WINS: 'UPDATE_WINS',
     UPDATE_LOSSES: 'UPDATE_LOSSES',
+    UPDATE_GUESSED_LETTERS: 'UPDATE_GUESSED_LETTERS',
     UPDATE_CORRECT_GUESSES: 'UPDATE_CORRECT_GUESSES',
     UPDATE_REMAINING_GUESSES: 'UPDATE_REMAINING_GUESSES',
     UPDATE_CANVAS: 'UPDATE_CANVAS',
@@ -105,6 +107,12 @@
           }
       }
   }
+  function updateGuessedLetters(letter) {
+      return {
+          type: 'UPDATE_GUESSED_LETTERS',
+          letter,
+      }
+  }
   ////////////////////////////////
 
   /* OUR REDUCER GENERATOR*/
@@ -145,6 +153,9 @@
     [ACTION.UPDATE_LOSSES](state, action) {
         return Object.assign({}, state, { losses: action.payload.newLossStreak });
     },
+    [ACTION.UPDATE_GUESSED_LETTERS](state, action) {
+        return Object.assign(state, { previousLetter: action.letter });
+    }
   });
 
 
@@ -195,6 +206,7 @@
           that.checkGuess = (letter) => {
               correctGuesses = store.correctGuesses;
               badGuesses = store.badGuesses;
+              let previousLetter = store.previousLetter;
               let remainingGuesses = store.remainingGuesses;
               let currentWord = store.currentWord;
               let length = currentWord.length
@@ -220,18 +232,25 @@
                   }
                 }
                 if (wrongGuess) {
-                  var newLetter = document.createElement('p');
-                  newLetter.innerHTML = letter;
-                  guessedLetters.appendChild(newLetter);
+                  // console.log(' WHAT IS OUR PREVIOUS LETTER???', previousLetter, letter);
+                  if(previousLetter !== letter) {
+                    var newLetter = document.createElement('p');
+                    newLetter.innerHTML = letter;
+                    guessedLetters.appendChild(newLetter);
+                    document.dispatchEvent(new CustomEvent('action', { detail: updateGuessedLetters(letter) }));
+                  } else if (previousLetter == letter) {
+                    return 
+                  }
+
                   badGuesses +=1;
                   remainingGuesses -= 1;
                   remainingGuessesEl.innerHTML = remainingGuesses;
                   if (remainingGuesses == 0) {
                     currentLossStreak += 1;
                     document.dispatchEvent(new CustomEvent('action', { detail: endGame(currentWinStreak, currentLossStreak)}));
-                    alert('SORRY LOOKS LIKE YOU SHOULD TRY AGIAN! WANT TO PLAY?')
+                    alert('SORRY LOOKS LIKE YOU SHOULD TRY AGAIN! WANT TO PLAY?')
                   } else {
-                    console.log(' WE SHOULD BE SENGIND OFF REMAINING GUESSES!!');
+                    // console.log(' WE SHOULD BE SENGIND OFF REMAINING GUESSES!!');
                     document.dispatchEvent(new CustomEvent('action', { detail: updateRemainingGuesses(badGuesses, remainingGuesses) }));
 
                   }
@@ -355,6 +374,7 @@
   });
   window.addEventListener('keydown', function(event) {
     let keyCode = event.keyCode;
+    // console.log(' WHAT IS THE KEY CODE', keyCode);
     let key = event.key
     if (event.defaultPrevented) {
         return;
@@ -363,7 +383,7 @@
     if (keyCode === 32 && store.gameStatus !== 'GAME_STARTED') {
       game.newGame();
     }
-    if (keyCode === 32 || keyCode === 91 || keyCode === 93 || keyCode === 190 || keyCode === 191 || keyCode === 16 || keyCode === 17 || keyCode === 18 || keyCode === 186) {
+    if (keyCode === 32 || keyCode === 91 || keyCode === 93 || keyCode === 190 || keyCode === 191 || keyCode === 13|| keyCode === 16 || keyCode === 17 || keyCode === 18 || keyCode === 186) {
           return;
     } else {
         if( store.gameStatus === 'GAME_STARTED') {
