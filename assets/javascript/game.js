@@ -4,14 +4,17 @@
       @var word this is where we will end up displaying the word as you guess, (if you can muahaha...)
       @var letters We will dump our alphabet of letters into this node.
       @var store our source of truth for our state of the game.
-      @const ACTION all the actions that update our game state as we play
-
    */
 
 
   var game,
+      wins,
+      losses,
+      remainingGuessesEl,
       canvas,
       word,
+      holder,
+      buttons,
       letters;
   /* THIS STORE WILL BE OUR MASTER STATE HOLDER */
   var store = {
@@ -20,38 +23,43 @@
     wordLength: 0,
     badGuesses: 0,
     correctGuesses: 0,
+    wins: 0,
+    losses: 0,
+    startingGuesses: 8,
+    remainingGuesses: 8,
   };
   /* OUR ACTION TYPES*/
   const ACTION = {
     GAME_STARTED: 'GAME_STARTED',
-    GAME_IN_PROGRESS: 'GAME_IN_PROGRESS',
     GAME_ENDED: 'GAME_ENDED',
     WORD_TO_GUESS: 'WORD_TO_GUESS',
+    UPDATE_WINS: 'UPDATE_WINS',
+    UPDATE_LOSSES: 'UPDATE_LOSSES',
     UPDATE_CORRECT_GUESSES: 'UPDATE_CORRECT_GUESSES',
-    UPDATE_BAD_GUESSES: 'UPDATE_BAD_GUESSES',
+    UPDATE_REMAINING_GUESSES: 'UPDATE_REMAINING_GUESSES',
     UPDATE_CANVAS: 'UPDATE_CANVAS',
   };
   /* OUR ACTIONS*/
-  /** @func startGame
-      @returns {Object}
-  */
-
   function startGame() {
+    console.log(' START GAME FIRE!!!!');
       return {
           type: 'GAME_STARTED',
+          remainingGuesses: 8,
+          startingGuesses: 8,
+          badGuesses: 0,
+          correctGuesses:0,
       };
   };
-  /** @func endGame
-      @returns {Object}
-  */
-  function endGame() {
+  function endGame(currentWins, currentLosses) {
       return {
           type: 'GAME_ENDED',
+          remainingGuesses: 8,
+          badGuesses: 0,
+          correctGuesses: 0,
+          wins: currentWins,
+          losses: currentLosses,
       };
   };
-  /** @func registerCurrentWord
-      @returns {Object}
-  */
   function registerCurrentWord(currentWord) {
       return {
           type: 'WORD_TO_GUESS',
@@ -60,9 +68,6 @@
           },
       };
   };
-  /** @func updateCorrectGuesses
-      @returns {Object}
-  */
   function updateCorrectGuesses(numberOfCorrectGuesses) {
       return {
           type: 'UPDATE_CORRECT_GUESSES',
@@ -71,58 +76,76 @@
           },
       };
   };
-  /** @func updateBadGuesses
-      @returns {Object}
-  */
-  function updateBadGuesses(numberOfBadGuesses) {
+  function updateRemainingGuesses(numberOfBadGuesses,numberOfRemainingGuesses) {
       return {
-          type: 'UPDATE_BAD_GUESSES',
+          type: 'UPDATE_REMAINING_GUESSES',
           payload: {
             numberOfBadGuesses,
+            numberOfRemainingGuesses,
           },
       };
   };
-
+  function updateLosses(newLossStreak) {
+    console.log(' UPDATE LOSS STREAK');
+      return {
+          type: 'UPDATE_LOSS_STREAK',
+          payload: {
+            newLossStreak,
+          },
+      };
+  }
+  function updateWins(newWinStreak) {
+    console.log(' UPDATE WINS FIRE!');
+      return {
+          type: 'UPDATE_WINS',
+          payload: {
+            newWinStreak,
+          }
+      }
+  }
   ////////////////////////////////
 
   /* OUR REDUCER GENERATOR*/
-  const ELEKTRO = {
-      createReducer(initialReducerState, handlers) {
+      function createReducer(initialReducerState, handlers) {
           return function reducer(state = {}, action) {
               if (handlers.hasOwnProperty(action.type)) {
                   return handlers[action.type](state, action);
               }
               return state;
           };
-      },
-      updateObjectProperty(obj, deviceId, fn) {
-          const updatedObject = fn(deviceId, obj);
-          return updatedObject;
-      },
-      updateObject(oldObject, newValues) {
-          return Object.assign({}, oldObject, newValues);
-      },
-  };
+      };
 
 //////////////////////////////
 
   /* AND OUR ACTUAL REDCUER FOR THE GAME*/
-  const GAME_REDUCER = ELEKTRO.createReducer({}, {
+  const GAME_REDUCER = createReducer({}, {
     [ACTION.GAME_STARTED](state, action) {
-        return Object.assign({}, state, { gameStatus: 'GAME_IN_PROGRESS' });
+      console.log(' WHAT IS THE REMAINING GUESSES IN THE REDUCER', action);
+        return Object.assign({}, state, { gameStatus: 'GAME_STARTED', remainingGuesses: action.remainingGuesses,
+          startingGuesses: action.startingGuesses,
+          badGuesses: action.badGuesses,
+          correctGuesses: action.correctGuesses })
     },
     [ACTION.GAME_ENDED](state, action) {
-        return Object.assign({}, state, { gameStatus: 'GAME_ENDED' });
+        return Object.assign({}, state, { gameStatus: 'GAME_ENDED', badGuesses: 0, correctGuesses: 0, wins: action.wins, losses: action.losses });
     },
     [ACTION.WORD_TO_GUESS](state,action) {
-      return Object.assign({}, state, { currentWord: action.payload.currentWord });
+      return Object.assign({}, state, { currentWord: action.payload.currentWord})
     },
     [ACTION.UPDATE_CORRECT_GUESSES](state, action) {
-        return Object.assign({}, state, { correctGuesses: action.payload.numberOfCorrectGuesses });
+        return Object.assign({}, state, { correctGuesses: action.payload.numberOfCorrectGuesses})
     },
-    [ACTION.UPDATE_BAD_GUESSES](state,action) {
-        return Object.assign({}, state, { badGuesses: action.payload.numberOfBadGuesses });
-    }
+    [ACTION.UPDATE_REMAINING_GUESSES](state,action) {
+        return Object.assign({}, state, { remainingGuesses: action.payload.numberOfRemainingGuesses, badGuesses: action.payload.numberOfBadGuesses  });
+    },
+    [ACTION.UPDATE_WINS](state, action) {
+      console.log(' UPDATE WINDS REDUCER FIRE');
+        return Object.assign({}, state, { wins: action.payload.newWinStreak });
+    },
+    [ACTION.UPDATE_LOSSES](state, action) {
+      console.log(' UPDATE LOSS REDUCER FIRE');
+        return Object.assign({}, state, { losses: action.payload.newLossStreak });
+    },
   });
 
 
@@ -136,11 +159,17 @@
             let random = Math.floor(Math.random() * length);
             let newWord = WORDS[random];
             document.dispatchEvent(new CustomEvent('action', { detail: registerCurrentWord(newWord) }));
-            return WORDS[random];
-          };
-          function renderLetters() {
+            remainingGuessesEl.innerHTML = store.startingGuesses;
+            letters.innerHTML = '';
+            // word.innerHTML = '';
+            console.log(' and what is the word inner html here????', word.innerHTML, newWord);
+            let placeholders = [];
             let frag = document.createDocumentFragment();
-
+            badGuesses = 0;
+            wordLength = newWord.length;
+            for (let i = 0; i < wordLength; i += 1) {
+              placeholders.push('_');
+            };
             that.letterChoices.map((letter) => {
               let div = document.createElement("div");
               div.innerHTML = letter.toUpperCase();
@@ -149,63 +178,72 @@
               frag.appendChild(div);
               letters.appendChild(frag);
             });
-          }
-          function renderPlaceholders() {
-            let placeholders = '';
-            badGuesses = 0;
-            wordLength = store.currentWord.length;
-            for (let i = 0; i < wordLength; i += 1) {
-              placeholders += '_';
-              word.innerHTML = placeholders;
-              word.style.fontSize = '40px';
-            };
-          }
-          that.newGame = () => {
-            // document.dispatchEvent(new CustomEvent('action', { detail: startGame() }))
-            getWord();
-            renderLetters();
+            word.style.fontSize = '40px';
+            word.textContent = placeholders.join('');
+            return WORDS[random];
           };
           // Get selected letter and remove it from the alphabet pad
-          function getLetter(letter) {
-              that.checkGuess(this.innerHTML);
+          function getLetter (letter) {
+            console.log(' WHAT IS OUR INNER HTML ???', this.innerHTML);
+              that.checkGuess(this.innerHTML.toLowerCase());
               this.innerHTML = '&nbsp;';
               this.style.cursor = 'default';
               this.style.dispaly = 'none';
               this.onclick = null;
           }
+          that.newGame = () => {
+            document.dispatchEvent(new CustomEvent('action', { detail: startGame() }))
+            getWord();
+          };
 
           that.checkGuess = (letter) => {
               correctGuesses = store.correctGuesses;
               badGuesses = store.badGuesses;
+              let remainingGuesses = store.remainingGuesses;
               let currentWord = store.currentWord;
               let length = currentWord.length
               let placeholders = word.innerHTML;
               let letterExists = currentWord.search(letter);
+              let currentLossStreak = store.losses;
+              let currentWinStreak = store.wins;
               wrongGuess = true;
               placeholders = placeholders.split('');
                 for (let i = 0; i < length; i +=1) {
                   if (currentWord.charAt(i) == letter.toLowerCase()) {
-                    placeholders[i] = letter;
+                    placeholders[i] = letter.toLowerCase();
                     wrongGuess = false;
                     correctGuesses += 1;
+                    word.innerHTML = placeholders.join('');
+
                   }
-                  if (correctGuesses === length) {
-                    document.dispatchEvent(new CustomEvent('action', { detail: endGame()}))
-                    that.renderCanvas();
+
+                  console.log(' IS THIS FIRING TWICE WHEN WE WIN????');
+                  if (placeholders.join('') === currentWord) {
+                    currentWinStreak += 1;
+                    document.dispatchEvent(new CustomEvent('action', { detail: endGame(currentWinStreak, currentLossStreak)}));
+                    console.log(' CURRENT WIN STREAK!!!', currentWinStreak, store.wins);
+                    return alert('NICE JOB YOU WON! WOULD YOU LIKE TO PLAY AGAIN?')
                   }
                 }
                 if (wrongGuess) {
                   badGuesses +=1;
-                  document.dispatchEvent(new CustomEvent('action', { detail: updateBadGuesses(badGuesses) }));
+                  remainingGuesses -= 1;
+                  remainingGuessesEl.innerHTML = remainingGuesses;
+                  if (remainingGuesses == 0) {
+                    currentLossStreak += 1;
+                    document.dispatchEvent(new CustomEvent('action', { detail: endGame(currentWinStreak, currentLossStreak)}));
+                    alert('SORRY LOOKS LIKE YOU SHOULD TRY AGIAN! WANT TO PLAY?')
+                  } else {
+                    document.dispatchEvent(new CustomEvent('action', { detail: updateRemainingGuesses(badGuesses, remainingGuesses) }));
+
+                  }
                   that.renderCanvas()
                 }
                 document.dispatchEvent(new CustomEvent('action', { detail: updateCorrectGuesses(correctGuesses) }));
-                word.innerHTML = placeholders.join('');
 
           };
           //helper function to draw our lines
           function drawLine(context, from, to) {
-            console.log(' DRAW LINE FIRE!');
             context.beginPath();
             context.moveTo(from[0], from[1]);
             context.lineTo(to[0], to[1]);
@@ -265,41 +303,39 @@
 
           return that;
       };
-
+    // wait for out DOM to load cause duhhh.
   document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('action', function(e) {
         store = GAME_REDUCER(store, e.detail);
-        document.dispatchEvent(new CustomEvent('state', { detail: store}));
+        document.dispatchEvent(new CustomEvent('state', { detail: store }));
     }, false);
     document.addEventListener('state', function(e) {
-      console.log(' WHAT IS OUR EVENT DATA?????', e.detail, 'STORE STATE',store);
-      // if (e.detail.gameStatus !== )
-      switch (e.detail.gameStatus) {
-        case 'GAME_IN_PROGRESS': {
-          game.newGame();
-        }
-
-          break;
-        default:
-
+      store = e.detail;
+      if (e.detail.gameStatus === 'GAME_ENDED') {
+        wins.innerHTML = e.detail.wins;
+        losses.innerHTML = e.detail.losses;
+        game.newGame();
+        game.renderCanvas();
+      }
+      if (e.detail.gameStatus === 'GAME_STARTED') {
+        buttons.style.display = 'none';
       }
     });
     // Lets initialze some varsss that relate to our playing field.
       canvas = document.getElementById('stage'),
       word = document.getElementById('word'),
       letters = document.getElementById('letters');
+      wins = document.getElementById('wins');
+      losses = document.getElementById('losses');
+      buttons = document.getElementById('gameButtons');
+      remainingGuessesEl = document.getElementById('remainingGuesses');
     // some click handlers for the start game and clear score buttons
 
       let startButton = document.getElementById('play');
-      let clearScore = document.getElementById('clear');
       startButton.addEventListener('click', function(e) {
         e.preventDefault();
         game.newGame();
-      });
-      clearScore.addEventListener('click', function(e) {
-        e.preventDefault();
-
       })
 
       // init is our power constructor that will create all our functions to draw
@@ -308,20 +344,23 @@
       document.getElementById('warning').style.display = "none";
   });
   window.addEventListener('keydown', function(event) {
+    let keyCode = event.keyCode;
+    let key = event.key
     if (event.defaultPrevented) {
         return;
     }
 
-    if (event.keyCode === 32 && store.gameStatus !== 'GAME_STARTED') {
-      document.dispatchEvent(new CustomEvent('action', { detail: startGame()}))
-      // game.newGame();
-    } else {
-      if (event.keyCode === 32) {
-          return;
-      }
-      game.checkGuess(event.key);
-
+    if (keyCode === 32 && store.gameStatus !== 'GAME_STARTED') {
+      game.newGame();
     }
+    if (keyCode === 32 || keyCode === 91 || keyCode === 16) {
+          return;
+    } else {
+        if( store.gameStatus === 'GAME_STARTED') {
+          game.checkGuess(key);
+        }
+    }
+
 
   });
 

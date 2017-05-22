@@ -22,3 +22,19 @@
 #word p {
   margin-right: 2px;
 }
+
+.gameStats {
+  display: inline-flex;
+  padding-right: 10px;
+  letter-spacing: 0.75px;
+  margin: 0.25em 0 0.4em 30px;
+  text-decoration: underline;
+  font-size: 18px;
+  font-family: sans-serif;
+}
+.gameStats p {
+  text-decoration: underline;
+  font-size: 18px;
+  font-family: sans-serif;
+
+}
