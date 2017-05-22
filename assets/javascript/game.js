@@ -225,11 +225,13 @@
                   guessedLetters.appendChild(newLetter);
                   badGuesses +=1;
                   remainingGuesses -= 1;
+                  remainingGuessesEl.innerHTML = remainingGuesses;
                   if (remainingGuesses == 0) {
                     currentLossStreak += 1;
                     document.dispatchEvent(new CustomEvent('action', { detail: endGame(currentWinStreak, currentLossStreak)}));
                     alert('SORRY LOOKS LIKE YOU SHOULD TRY AGIAN! WANT TO PLAY?')
                   } else {
+                    console.log(' WE SHOULD BE SENGIND OFF REMAINING GUESSES!!');
                     document.dispatchEvent(new CustomEvent('action', { detail: updateRemainingGuesses(badGuesses, remainingGuesses) }));
 
                   }
